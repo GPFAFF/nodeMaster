@@ -7,6 +7,7 @@
 const http = require('http');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
+const config = require('./config');
 
 // The server should respond to all requests with a string.
 const server = http.createServer((req, res) => {
@@ -61,21 +62,17 @@ const server = http.createServer((req, res) => {
       const payLoadString = JSON.stringify(payLoad);
 
       // Return the response
+      res.setHeader('Content-Type', 'application/json');
       res.writeHead(statusCode);
       res.end(payLoadString);
       console.log('Returning this response', statusCode, payLoadString);
-       // Log what path the person was asking for.
-      // console.log(`Request is received on this path: ${trimmedPath} with this method: ${method} and with this queryString`, queryStringObject);
-      // // Log the headers sent
-      // console.log('Header requests', headers);
-      // console.log('Here is the payload:', payLoad)
     });
   });
 });
 
 // Start the server, and have it listen on port.
-server.listen(4444, () => {
-  console.log('Server is listening on PORT 4444');
+server.listen(config.port, () => {
+  console.log(`Server is listening on ${config.port} in ${config.envName} mode`);
 });
 
 // Define handlers
