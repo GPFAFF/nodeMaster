@@ -5,20 +5,44 @@
 
 // Dependencies
 const http = require('http');
+const https = require('https');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./config');
+const fs = require('fs');
 
-// The server should respond to all requests with a string.
-const server = http.createServer((req, res) => {
+// Instatitating the server should respond to all requests with a string.
+const httpServer = http.createServer((req, res) => {
+  unifiedServers(req, res);
+});
+
+// Start the server, and have it listen on port.
+httpServer.listen(config.httpPort, () => {
+  console.log(`Server is listening on ${config.httpPort} in ${config.envName} mode`);
+});
+
+const httpsServerOptions = {
+  'certificate': fs.readFileSync('./https/cert.pem'),
+  'key': fs.readFileSync('./https/key.pem'),
+}
+
+const httpsServer = https.createServer(httpsServerOptions, (req, res) => {
+  unifiedServers(req, res);
+})
+
+httpsServer.listen(config.httpsPort, () => {
+  console.log(`Server is listening on ${config.httpsPort} in ${config.envName} mode`);
+});
+
+// Unify servers
+const unifiedServers = (req, res) => {
   // Grab URL and parse it.
   const parsedURL = url.parse(req.url, true);
   // Get path from URL.
   const path = parsedURL.pathname;
-  const trimmedPath = path.replace(/^\/+|\/+$/g,'');
+  const trimmedPath = path.replace(/^\/+|\/+$/g, '');
 
   // Get query string as object
-
   const queryStringObject = parsedURL.query;
 
   // Get HTTP Method
@@ -37,11 +61,9 @@ const server = http.createServer((req, res) => {
     payLoad += decoder.end();
 
     // Route proper handler, if one is not found go to NotFound Handler
-
-    const selectedHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
+    const selectedHandler = typeof (router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
 
     // Construct data object to send to handler
-
     const data = {
       trimmedPath,
       queryStringObject,
@@ -53,10 +75,10 @@ const server = http.createServer((req, res) => {
     // Route the request to the handler specified in router
     selectedHandler(data, (statusCode, payLoad) => {
       // Use status code called back by handler, or default to 200
-      statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+      statusCode = typeof (statusCode) === 'number' ? statusCode : 200;
 
       // Use the payload called back by the handler or default to empty object.
-      payLoad = typeof(payLoad) == 'object' ? payLoad : {};
+      payLoad = typeof (payLoad) === 'object' ? payLoad : {};
 
       // Convert payLoad to string
       const payLoadString = JSON.stringify(payLoad);
@@ -68,16 +90,11 @@ const server = http.createServer((req, res) => {
       console.log('Returning this response', statusCode, payLoadString);
     });
   });
-});
 
-// Start the server, and have it listen on port.
-server.listen(config.port, () => {
-  console.log(`Server is listening on ${config.port} in ${config.envName} mode`);
-});
+}
 
 // Define handlers
-
-var handlers = {};
+let handlers = {};
 
 // Sample Handler
 handlers.sample = (data, callback) => {
