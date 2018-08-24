@@ -10,6 +10,12 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const config = require('./config');
 const fs = require('fs');
+// const _data = require('./lib/data');
+
+// // Testiing
+// _data.delete('test', 'newFile', (error) => {
+//   console.log(`this was the error - ${error}`);
+// });
 
 // Instatitating the server should respond to all requests with a string.
 const httpServer = http.createServer((req, res) => {
@@ -96,18 +102,15 @@ const unifiedServers = (req, res) => {
 // Define handlers
 let handlers = {};
 
-// Sample Handler
-handlers.sample = (data, callback) => {
-  // Callback and HTTP status code and a payload object
-  callback(406, {'name' : 'My name is Sample Handler'});
-
+// Ping Handler
+handlers.ping = (data, callback) => {
+  callback(200);
 }
-
 // 404 Handler
 handlers.notFound = (data, callback) => {
   callback(404);
 }
 // Define a request router
 const router = {
-  'sample': handlers.sample
+  'ping': handlers.ping
 }
