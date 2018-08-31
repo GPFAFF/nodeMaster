@@ -8,8 +8,10 @@ const http = require('http');
 const https = require('https');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
-const config = require('./config');
+const config = require('./lib/config');
 const fs = require('fs');
+const handlers = require('./lib/handlers');
+const helpers = require('./lib/helpers');
 // const _data = require('./lib/data');
 
 // // Testiing
@@ -59,12 +61,12 @@ const unifiedServers = (req, res) => {
 
   // Get payload, if user sends one
   const decoder = new StringDecoder('utf-8');
-  let payLoad = '';
+  let payLoadData = '';
   req.on('data', (data) => {
-    payLoad += decoder.write(data);
+    payLoadData += decoder.write(data);
   });
   req.on('end', () => {
-    payLoad += decoder.end();
+    payLoadData += decoder.end();
 
     // Route proper handler, if one is not found go to NotFound Handler
     const selectedHandler = typeof (router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
@@ -75,7 +77,7 @@ const unifiedServers = (req, res) => {
       queryStringObject,
       method,
       headers,
-      payLoad
+      payload: helpers.parseJsonToObject(payLoadData)
     }
 
     // Route the request to the handler specified in router
@@ -99,18 +101,8 @@ const unifiedServers = (req, res) => {
 
 }
 
-// Define handlers
-let handlers = {};
-
-// Ping Handler
-handlers.ping = (data, callback) => {
-  callback(200);
-}
-// 404 Handler
-handlers.notFound = (data, callback) => {
-  callback(404);
-}
 // Define a request router
 const router = {
-  'ping': handlers.ping
+  'ping': handlers.ping,
+  'users': handlers.users,
 }

@@ -8,6 +8,8 @@
 // Dependencies
 const fs = require('fs');
 const path = require('path');
+const helpers = require('./helpers');
+
 
 // Container for module
 const lib = {};
@@ -45,9 +47,15 @@ lib.create = function(dir, file, data, callback) {
 // Read data from file
 lib.read = (dir, file, callback) => {
   fs.readFile(`${lib.baseDir}${dir}/${file}.json`, 'utf8', (error, data) => {
-    callback(error, data);
-  })
+    if (!error && data) {
+      const parsedData = helpers.parseJsonToObject(data);
+      callback(false, parsedData);
+    } else {
+      callback(error, data);
+    }
+  });
 }
+
 // Update a file
 lib.update = (dir, file, data, callback) => {
   fs.open(`${lib.baseDir}${dir}/${file}.json`, 'r+', (error, fileDescriptor) => {
